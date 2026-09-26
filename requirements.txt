@@ -1,0 +1,23 @@
+# ===== Web server / Backend =====
+fastapi==0.136.3                 # Framework để xây dựng API backend (định nghĩa các endpoint)
+uvicorn==0.48.0                  # ASGI server để chạy ứng dụng FastAPI
+jinja2==3.1.6                    # Template engine, render file HTML cho giao diện web
+python-multipart==0.0.29         # Xử lý dữ liệu form và file upload trong FastAPI
+python-dotenv==1.2.2             # Đọc biến môi trường (API key...) từ file .env
+
+# ===== LLM / Agent (LangChain ecosystem) =====
+langchain==1.3.2                 # Framework chính để xây dựng ứng dụng LLM (chain, agent, tool)
+langchain-google-genai==4.2.4    # Kết nối LangChain với Google Gemini (model chat + embedding)
+langchain-core==1.4.0            # Các thành phần lõi của LangChain (prompt, message, runnable...)
+langgraph==1.2.2                 # Xây dựng agent dạng đồ thị trạng thái (graph workflow)
+langchain-text-splitters==1.1.2  # Cắt tài liệu dài thành các đoạn nhỏ (chunk) để nhúng vector
+langgraph-checkpoint-sqlite==3.1.0  # Lưu trạng thái/lịch sử hội thoại của LangGraph vào SQLite
+
+# ===== RAG / Tài liệu / Công cụ =====
+langchain-chroma==1.1.0          # Kết nối LangChain với vector database Chroma
+chromadb==1.5.9                  # Vector database lưu embedding để tìm kiếm ngữ nghĩa
+pypdf==6.12.2                    # Đọc và trích xuất nội dung từ file PDF
+docx2txt==0.9                    # Trích xuất văn bản từ file Word (.docx)
+langchain-tavily==0.2.18         # Tích hợp công cụ tìm kiếm web Tavily vào LangChain
+tavily-python==0.7.24            # SDK Python gốc của Tavily Search API
+sqlalchemy==2.0.50               # ORM để làm việc với database (lưu user, lịch sử chat...)
