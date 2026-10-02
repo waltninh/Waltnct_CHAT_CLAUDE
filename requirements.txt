@@ -12,6 +12,7 @@ langchain-core==1.4.0            # Các thành phần lõi của LangChain (prom
 langgraph==1.2.2                 # Xây dựng agent dạng đồ thị trạng thái (graph workflow)
 langchain-text-splitters==1.1.2  # Cắt tài liệu dài thành các đoạn nhỏ (chunk) để nhúng vector
 langgraph-checkpoint-sqlite==3.1.0  # Lưu trạng thái/lịch sử hội thoại của LangGraph vào SQLite
+langchain-openrouter==0.2.9      # Kết nối LangChain với OpenRouter (gọi model Claude qua OpenRouter)
 
 # ===== RAG / Tài liệu / Công cụ =====
 langchain-chroma==1.1.0          # Kết nối LangChain với vector database Chroma

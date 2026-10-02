@@ -48,6 +48,20 @@ Rules:
 - When using web search, summarize clearly and mention that the answer is based on web search results.
 - Be clear, helpful, and concise.
 """
+def normalize_model_name(model_name:str | None) -> str:
+    """ 
+    validate selected model from frontend 
+    if model is missing or not allowed, fallback to default_model
+    """
+    if not model_name:
+        return DEFAULT_MODEL
+
+    model_name = model_name.strip()
+
+    if model_name not in ALLOWED_MODELS:
+        return DEFAULT_MODEL
+    return model_name 
+
 
 def build_agent(model_name: str ):
     """build one langgraph agent for a selected Claud model."""
@@ -60,4 +74,33 @@ def build_agent(model_name: str ):
         streaming=True
     )
 
-    llm_with_tool
+    llm_with_tool = llm.bind_tools(tools)
+
+    def chatbot_node(state: MessagesState):
+        messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
+
+        response = llm_with_tool.invoke(messages)
+
+        return {
+            "messages":[response]
+        }
+
+    tool_node = ToolNode(tools)
+
+    workflow = StateGraph(MessagesState)
+
+    workflow.add_node("chatbot", chatbot_node)
+    workflow.add_node("tools", tool_node)
+
+    workflow.add_edge(START, "chatbot")
+    workflow.add_conditional_edges("chatbot", tools_condition)
+    workflow.add_edge("tools", "chatbot")
+
+    conn = sqlite3.connect(
+        "data/langgraph_checkpoints.sqlite",
+        check_same_thread=False
+    )
+
+    checkpointer = SqliteSaver(conn)
+    return workflow.compile(checkpointer=checkpointer)
+
