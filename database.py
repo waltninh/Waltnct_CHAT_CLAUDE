@@ -16,7 +16,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
-
+# 3 tables: Conversation, ChatMessage, LongTermMemory
 class Conversation(Base):
     __tablename__ = "conversations"
 
@@ -46,11 +46,11 @@ class LongTermMemory(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-def init_db():
+def init_db(): # call only one when starting the app
     Base.metadata.create_all(bind=engine)
 
 
-def create_or_update_conversation(thread_id: str, first_message: str | None = None):
+def create_or_update_conversation(thread_id: str, first_message: str | None = None):#create or update a conversation
     db = SessionLocal()
 
     try:

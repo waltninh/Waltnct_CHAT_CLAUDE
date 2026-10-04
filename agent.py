@@ -12,23 +12,27 @@ os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
 from langchain_openrouter import ChatOpenRouter
 from langchain_core.messages import SystemMessage
-from langgraph.graph import StateGraph, START, MessagesState, END
+from langgraph.graph import StateGraph, START, MessagesState
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
+from tools import tools
 
-Path("data").mkdir(exist_ok=True) # create data directory if it doesn't exist
+Path("data").mkdir(exist_ok=True)
 
-DEFAULT_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5")
+
+# Model IDs on OpenRouter
+DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 
 ALLOWED_MODELS = {
-    "claude-fable-5-1",
-    "claude-opus-5-5",
-    "claude-sonnet-5-5",
-    "claude-haiku-4-5-20251001",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-flash-lite"
 }
 
+
+
 SYSTEM_PROMPT = """
-You are a helpful Agentic AI assistant named WaltClaude similar to Claude.
+You are a helpful Agentic AI assistant named BappyGPT similar to ChatGPT.
 
 You can:
 1. Answer normal questions.
@@ -40,7 +44,7 @@ You can:
 7. Use calculator for math.
 
 Rules:
-- If the user asks about latest news, current events, recent updates, today's information, current price...
+- If the user asks about latest news, current events, recent updates, today's information, current prices, current people, current versions, new releases, or anything time-sensitive, use Tavily Search.
 - If the user asks about an uploaded document, use search_uploaded_documents.
 - If the user asks you to remember something, use remember_this.
 - If the user asks about previous preferences or saved facts, use recall_memory.
@@ -48,11 +52,15 @@ Rules:
 - When using web search, summarize clearly and mention that the answer is based on web search results.
 - Be clear, helpful, and concise.
 """
-def normalize_model_name(model_name:str | None) -> str:
-    """ 
-    validate selected model from frontend 
-    if model is missing or not allowed, fallback to default_model
+
+
+
+def normalize_model_name(model_name: str | None) -> str:
     """
+    Validate selected model from frontend.
+    If model is missing or not allowed, fallback to DEFAULT_MODEL.
+    """
+
     if not model_name:
         return DEFAULT_MODEL
 
@@ -60,11 +68,16 @@ def normalize_model_name(model_name:str | None) -> str:
 
     if model_name not in ALLOWED_MODELS:
         return DEFAULT_MODEL
-    return model_name 
+
+    return model_name
 
 
-def build_agent(model_name: str ):
-    """build one langgraph agent for a selected Claud model."""
+
+
+def build_agent(model_name: str):
+    """
+    Build one LangGraph agent for a selected Gemini model.
+    """
 
     selected_model = normalize_model_name(model_name)
 
@@ -74,15 +87,15 @@ def build_agent(model_name: str ):
         streaming=True
     )
 
-    llm_with_tool = llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools(tools)
 
     def chatbot_node(state: MessagesState):
         messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
 
-        response = llm_with_tool.invoke(messages)
+        response = llm_with_tools.invoke(messages)
 
         return {
-            "messages":[response]
+            "messages": [response]
         }
 
     tool_node = ToolNode(tools)
@@ -102,5 +115,22 @@ def build_agent(model_name: str ):
     )
 
     checkpointer = SqliteSaver(conn)
+
     return workflow.compile(checkpointer=checkpointer)
 
+
+_AGENT_CACHE = {}
+
+
+def get_agent(model_name: str | None = None):
+    """
+    Return cached LangGraph agent for selected model.
+    If not created yet, create it once and reuse it.
+    """
+
+    selected_model = normalize_model_name(model_name)
+
+    if selected_model not in _AGENT_CACHE:
+        _AGENT_CACHE[selected_model] = build_agent(selected_model)
+
+    return _AGENT_CACHE[selected_model]
